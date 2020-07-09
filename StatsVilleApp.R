@@ -153,8 +153,14 @@ server <- function(input, output,session) {
       #Require
       req(input$groupID)
   
-      if ("all" %in% input$groupID){
+      if("all" %in% input$groupID){
+        
+        if("all" %in% input$playerID){
         data <- data.all
+        
+        } else{
+          data <- filter(data.all, PlayerID %in% input$playerID)
+        }
       
       } else{
         
