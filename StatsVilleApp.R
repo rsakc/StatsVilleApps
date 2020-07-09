@@ -266,12 +266,14 @@ server <- function(input, output,session) {
        #Y Variable 2 is Not Selected
        if(input$yvar2 == "None"){
        myplot <- myplot + facet_wrap(as.formula(paste("~", input$facets))) +
-         labs(title = paste("Plot of", input$yvar,"by", input$xvar, "and Faceted by", input$facets))
+         labs(title = paste("Plot of", input$yvar,"by", input$xvar, "and Faceted by", input$facets)) +
+         theme(strip.text = element_text(size = 16)) 
         
        #Y Variable 2 is Selected
        } else if(input$yvar2 != "None"){
          myplot <- myplot + facet_wrap(as.formula(paste("~", input$facets))) +
-           labs(title = paste("Plot of", input$yvar, "and", input$yvar2,"by", input$xvar, "and Faceted by", input$facets))
+           labs(title = paste("Plot of", input$yvar, "and", input$yvar2,"by", input$xvar, "and Faceted by", input$facets)) +
+           theme(strip.text = element_text(size = 16)) 
        }
     }
     
