@@ -1,4 +1,4 @@
-#Last Updated on July 9
+#Last Updated on July 10
 
 #Sample Size
 #Scaling with Two Y Variables
@@ -58,6 +58,14 @@ ui <- fluidPage(
                 selectize = TRUE,
                 selected = "all"),
       
+      sliderInput(inputId = "day",
+                 label = "Choose Days:",
+                 step = 1,
+                 ticks = FALSE,
+                 min = min(data.all$Day),
+                 max = max(data.all$Day),
+                 value = c(min(data.all$Day), max(data.all$Day))),
+      
        selectInput(inputId = "xvar",
                   label = "X Variable:",
                   choices = c("Day", "Sample Size"),
@@ -76,21 +84,39 @@ ui <- fluidPage(
                   selected = "None",
                   multiple = FALSE),
       
-      checkboxInput("smoother", "Add a Model", FALSE),
-      
       selectInput(inputId = "facets",
                   label = "Facet by:",
                   choices = c("None", "Game", "PlayerID", "WinLose", "Day"),
                   selected = "None",
                   multiple = FALSE),
-    
-      downloadButton('downloadData', label = "StatsVille Data")
+      
+      selectInput(inputId = "tests",
+                  label = "Statistical Tests:",
+                  choices = c("None", "Chi-Sq Test", "Two Proportion Z-Test", "Two Sample T-Test"),
+                  selected = "None",
+                  multiple = FALSE),
+      
+      checkboxInput("smoother", "Add a Model", FALSE),
+      
+      checkboxInput("summary", "Show Summary Statistics", FALSE),
+      
+      downloadButton('downloadData', label = "StatsVille Data"),
+      
+      
+      a(h5("Instructor Details"),
+        href="https://stat2labs.sites.grinnell.edu/statsville.html", 
+        align="left", target = "_blank")
       
     ),
     
     #Outputs
     mainPanel(
-      plotOutput("Plot")
+      plotOutput("Plot"),
+      uiOutput("header"),
+      verbatimTextOutput("testsoutput"),
+      uiOutput("ptext"),
+      tableOutput("SummaryTable")
+     
     )
   )
 )
@@ -119,7 +145,7 @@ server <- function(input, output,session) {
      #Require
      req(input$xvar)  
     
-    if (input$xvar == "Day")
+    if(input$xvar == "Day")
         {ChoiceA <- c("Budget", "AvailToTreat", "TreatA", "TreatB", "CureA", "CureB", "PercentCureA", "PercentCureB", "CostA", "CostB", "SickCost")}
     else{ChoiceA = c("Budget", "AvailToTreat", "TreatA", "CureA", "PercentCureA", "CostA", "SickCost")}
   
@@ -156,19 +182,19 @@ server <- function(input, output,session) {
       if("all" %in% input$groupID){
         
         if("all" %in% input$playerID){
-        data <- data.all
+        data <- filter(data.all, Day >= input$day[1], Day <= input$day[2])
         
         } else{
-          data <- filter(data.all, PlayerID %in% input$playerID)
+          data <- filter(data.all, PlayerID %in% input$playerID, Day >= input$day[1], Day <= input$day[2])
         }
       
       } else{
         
           if("all" %in% input$playerID){
-          data <- filter(data.all, GroupID %in% input$groupID)
+          data <- filter(data.all, GroupID %in% input$groupID, Day >= input$day[1], Day <= input$day[2])
         
         } else{
-          data <- filter(data.all, GroupID %in% input$groupID, PlayerID %in% input$playerID)
+          data <- filter(data.all, GroupID %in% input$groupID, PlayerID %in% input$playerID, Day >= input$day[1], Day <= input$day[2])
         }
       }
     
@@ -280,6 +306,140 @@ server <- function(input, output,session) {
     return(myplot)
     
     })
+    
+    
+    #Statistical Tests
+    output$testsoutput <- renderPrint({
+      
+      #Reactive Data 
+      plotData <- plotDataR()
+      
+      #We must have data
+      if(nrow(plotData) > 0){
+      
+      
+      ##Two Proportion Z Test
+      if(input$tests == "Two Proportion Z-Test"){
+        
+        #Header
+        output$header <- renderUI({
+          h4("Observed Table:")
+        })
+        
+        #Creating Vectors
+        CureA <- sum(plotData$CureA)
+        CureB <- sum(plotData$CureB)
+        Cured <- c(CureA, CureB)
+        Treated <- c(sum(plotData$TreatA), sum(plotData$TreatB))
+        
+        #Help Text for Proportions
+        output$ptext <- renderUI(HTML(paste(
+          em("prop 1: Treatment A, prop 2: Treatment B"))))
+        
+        prop.test(Cured, Treated, correct = FALSE)
+        
+    
+      ##Chi Squared Test
+      } else if(input$tests == "Chi-Sq Test"){
+        
+        #Header
+        output$header <- renderUI({
+          h4("Observed Table:")
+        })
+        
+        #Creating Vectors
+        CureA <- sum(plotData$CureA)
+        NotCureA <- sum(plotData$TreatA) - sum(plotData$CureA)
+        CureB <- sum(plotData$CureB)
+        NotCureB <- sum(plotData$TreatB)- sum(plotData$CureB)
+        
+        Cured <- c(CureA, CureB)
+        NotCured <- c(NotCureA, NotCureB)
+        
+        #Creating Table to Run Test
+        table <- data.frame(Cured, NotCured)
+        
+        #Running Test
+        chisq.test(table[, 1:2], correct = FALSE) 
+        
+        
+      ##Two Sample T-Test
+      } else if(input$tests == "Two Sample T-Test"){
+        
+        #Header
+        output$header <- renderUI({
+          h4("Observed Table:")
+        })
+        
+        #Means
+        CureA <- plotData$CureA
+        CureB <- plotData$CureB
+        
+        #Test
+        if(length(CureA) > 1 & length((CureB)) > 1){
+          t.test(CureA, CureB)
+        
+        } else{
+          "There are not enough observations to run the Two Sample T-Test."
+        }
+    
+      }
+    }
+  })
+    
+    
+    #Removing Header if tests input is none
+    observeEvent(input$tests, {
+
+      if(input$tests == "None"){
+        output$header <- renderUI({
+          ""})
+
+      }
+    })
+    
+    
+    ##Creating Summary Table
+    output$SummaryTable <- renderTable({
+      
+      #Reactive Data
+      plotData <- plotDataR()
+      
+      if(input$summary == TRUE){
+      
+      #Creating Vectors
+      CureA <- sum(plotData$CureA)
+      NotCureA <- sum(plotData$TreatA) - sum(plotData$CureA)
+      CureB <- sum(plotData$CureB)
+      NotCureB <- sum(plotData$TreatB)- sum(plotData$CureB)
+      
+      Treatment <- c("Treatment A", "Treatment B")
+      Treated <- c(sum(plotData$TreatA), sum(plotData$TreatB))
+      Cured <- c(CureA, CureB)
+      NotCured <- c(NotCureA, NotCureB)
+      
+      #Creating Table
+      stable <- data.frame(Treatment, Treated, Cured, NotCured)
+      
+      return(stable)
+      
+      }
+    })
+    
+    
+   #Removing Proportion Help Text
+    observeEvent(input$tests, {
+      
+      if(input$tests != "Two Proportion Z-Test"){
+        output$ptext <- renderUI({""})
+      }
+  
+    })
+    
+    
+    
+    
+    
     
     
     #Download Data
