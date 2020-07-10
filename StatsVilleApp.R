@@ -1,8 +1,5 @@
 #Last Updated on July 10
  
-#Sample Size
-#Scaling with Two Y Variables
-
 #Loading Libraries
 library(shiny)
 library(shinythemes)
