@@ -1,4 +1,12 @@
-#Last Updated on July 9
+#Last Updated on July 10
+
+##Comments
+#Number in School -> Population
+#Maybe one medicine instead of two
+#Total cost of treating patients somewhere
+#A lot of lines are missing from the graphs
+#A bunch of errors in the app
+
 
 #Loading Libraries
 library(shinydashboard)
@@ -10,20 +18,20 @@ library(dplyr)
 
 
 ##UI
-ui <- dashboardPage(skin = "red",
+ui <- dashboardPage(skin = "yellow",
                     dashboardHeader(
                       title = "SIR Model Simulation",
                       titleWidth = 350),
                     
                     dashboardSidebar(
                       sliderInput(inputId = "trials",
-                                  label = "# of Trials",
+                                  label = "Number of Trials",
                                   min = 1,
                                   max = 200,
                                   value = "20"),
                       
                       sliderInput(inputId = "population",
-                                  label = "# in School:",
+                                  label = "Number in School:",
                                   min = 100,
                                   max = 1500,
                                   value = "300"),
@@ -89,8 +97,7 @@ ui <- dashboardPage(skin = "red",
                         The purple line represents the amount of money spent on treatment B.
                         The black line represents the amount of money spent on people being sick."
                       ),
-                      box("This version implements randomness through
-                          #binomial distribution.")
+                      box("This version implements randomness through the binomial distribution.")
                       )
                     
                     )
@@ -107,6 +114,8 @@ server <- function(input, output) {
   finaloutput <- finaloutput[-1,]
   
   sirDF <- reactive({
+    
+    #Assigning Variables to Inputs
     population <- as.numeric(input$population)
     healthySymp <- as.numeric(input$percHealthyWithSymp)
     initDiseased <- round(as.numeric(input$initdis) * population)
@@ -129,6 +138,8 @@ server <- function(input, output) {
       # Calculations
       trial <- 1
       while(trial <= numtrials) {
+        
+        #Day 0
         mat[1,1] <- 0 #Day
         mat[1,2] <- population #Healthy
         mat[1,4] <- 0 #Diseased
@@ -139,6 +150,7 @@ server <- function(input, output) {
         mat[1,24] <- 0 #sick Cost
         mat[1,25] <- 0 #Total Cost
         
+        #Day 1
         mat[2,1] <- 1 #Day
         mat[2,4] <- initDiseased #Diseased
         mat[2,2] <- population - initDiseased #Healthy
@@ -154,7 +166,7 @@ server <- function(input, output) {
         mat[2,13] <- rbinom(1, mat[2,11], bEff) # Treatment B Cures
         mat[2,14] <- mat[2,12] + mat[2,13] # Sum Disease Cured
         mat[2,15] <- mat[2,14] # Cured
-        mat[2,16] <- min(c(round(spreadRate * mat[2,2] * mat[2,4]), mat[2,2]), na.rm = TRUE) # Catch Disease
+        mat[2,16] <- min(c(round(spreadRate * mat[2,2] * mat[2,4]), mat[2,2]), na.rm = TRUE) #Catch Disease
         mat[2,17] <- trtACost * mat[2,7] + trtBCost * mat[2,8] # Cost
         mat[2,18] <- mat[2,4] + mat[2,2] + mat[2,14] #Check
         mat[2,19] <-  trtACost * mat[2,7] #Cost A
@@ -166,6 +178,7 @@ server <- function(input, output) {
         mat[2,25] <- mat[2,22] + mat[2,23] + mat[2,24] #Total Cost Cumulative 
         mat[2,26] <- mat[2,19] + mat[2,20] #Treat Cost Daily
         
+        #Remaining Days
         for(i in 3:dim(mat)[1]) {
           mat[i,1] = i-1
           mat[i,4] = mat[i-1, 4] + mat[i-1, 16] - mat[i-1, 14]
@@ -202,12 +215,15 @@ server <- function(input, output) {
         trial <- trial + 1
         mat <- matrix(nrow=30, ncol=26)
       }
+      
       View(finaloutput)
       #write.xlsx(finaloutput, "/Users/Aurora/Desktop/LevelA.xlsx")
       finaloutput
+      
+      
     } else {
       observeEvent(percTrtA + percTrtB > 1, {
-        showNotification("Percent treated A and oercent treated B can't be more than 1.")
+        showNotification("Percent treated A and percent treated B can't be more than 1.")
       })
       observeEvent(healthySymp + spreadRate > 0.13, {
         showNotification("Percent healthy with symptoms and spread rate can't be greater than 0.13")
