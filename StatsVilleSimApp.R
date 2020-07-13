@@ -4,8 +4,6 @@
 #Number in School -> Population
 #Maybe one medicine instead of two
 #Total cost of treating patients somewhere
-#A lot of lines are missing from the graphs
-#A bunch of errors in the app
 
 
 #Loading Libraries
@@ -13,8 +11,6 @@ library(shinydashboard)
 library(ggplot2)
 library(shiny)
 library(dplyr)
-#install.packages("openxlsx") 
-#library(openxlsx)
 
 
 ##UI
@@ -33,7 +29,8 @@ ui <- dashboardPage(skin = "yellow",
                       sliderInput(inputId = "population",
                                   label = "Number in School:",
                                   min = 100,
-                                  max = 1500,
+                                  max = 30000,
+                                  step = 50,
                                   value = "300"),
                       
                       sliderInput(inputId = "initdis",
@@ -83,36 +80,37 @@ ui <- dashboardPage(skin = "yellow",
                       textInput(inputId = "sickcost",
                                 label = "Sick Cost",
                                 value = "50")
-                      #submitButton("Run")
                     ),
                     
                     dashboardBody(
                       plotOutput("plot"),
-                      plotOutput("plotCost"),
-                      box(
-                        "The red line represents the number of people that have the disease.
-                        The green line represents the number of people that are healthy.
-                        The blue line repersents the number of people that have been cured.
-                        The orange line represents the amount of money spent on treatment A.
-                        The purple line represents the amount of money spent on treatment B.
-                        The black line represents the amount of money spent on people being sick."
-                      ),
-                      box("This version implements randomness through the binomial distribution.")
+                      plotOutput("plotCost")
+                      # box(
+                      #   "The red line represents the number of people that have the disease.
+                      #   The green line represents the number of people that are healthy.
+                      #   The blue line repersents the number of people that have been cured.
+                      #   The orange line represents the amount of money spent on treatment A.
+                      #   The purple line represents the amount of money spent on treatment B.
+                      #   The black line represents the amount of money spent on people being sick."
+                      # ),
+                      # box("This version implements randomness through the binomial distribution.")
                       )
-                    
                     )
 
 
 ##Server
 server <- function(input, output) {
+  
+  #Setting Up
   mat <- matrix(nrow=30, ncol=26)
   sirDF <- as.data.frame(mat)
   finaloutput <- data.frame("trial", "Days", "Diseased", "NumberHealthy", "Cured", 
                             "Cured_by_A", "Cured_by_B", "TreatCost","CostA", "CostB",
                             "Sick.Cost", "Total.Cost_Acc")
-  
   finaloutput <- finaloutput[-1,]
   
+  
+  #Reactive Object
   sirDF <- reactive({
     
     #Assigning Variables to Inputs
@@ -134,7 +132,9 @@ server <- function(input, output) {
                    "Cured_by_A", "Cured_by_B", "TreatCost","CostA", "CostB",
                    "Sick.Cost", "Total.Cost_Acc")
     
+    #Condition to run simulation
     if(percTrtA + percTrtB <= 1 && healthySymp + spreadRate <= 0.13) {
+      
       # Calculations
       trial <- 1
       while(trial <= numtrials) {
@@ -208,6 +208,7 @@ server <- function(input, output) {
           mat[i, 26] <- mat[i,19] + mat[i,20] #Treat Cost Daily
         }
         
+        #Adding to Data Frame
         data <- as.data.frame(mat[,c(1,4,2,15,12,13,26,22,23,24,25)])
         data <- cbind("Trial" = trial, data)
         colnames(data) <- colNamess
@@ -216,59 +217,89 @@ server <- function(input, output) {
         mat <- matrix(nrow=30, ncol=26)
       }
       
-      View(finaloutput)
-      #write.xlsx(finaloutput, "/Users/Aurora/Desktop/LevelA.xlsx")
-      finaloutput
+      return(finaloutput)
       
-      
-    } else {
-      observeEvent(percTrtA + percTrtB > 1, {
-        showNotification("Percent treated A and percent treated B can't be more than 1.")
-      })
-      observeEvent(healthySymp + spreadRate > 0.13, {
-        showNotification("Percent healthy with symptoms and spread rate can't be greater than 0.13")
-      })
-    }
+    } 
   })
   
   
   #Creating Visualization (1)
   output$plot <- renderPlot({
+     
+    #Assigning Variables to Inputs
+    percTrtA <- as.numeric(input$percTreatA)
+    percTrtB <- as.numeric(input$percTreatB)
+    healthySymp <- as.numeric(input$percHealthyWithSymp)
+    spreadRate <- as.numeric(input$spread)
     
-    #  Ave <- id %>%
-    #   group_by(Day) %>%
-    #  summarise(mean(input$CostA))
-    # data1$average=aggregate(. ~, list(data1$))
-    
+    #Condition to create visual
+    if(percTrtA + percTrtB <= 1 && healthySymp + spreadRate <= 0.13) {
+
     ggplot(sirDF(), aes(x = Days)) + 
-      geom_line(aes(y = Diseased, group=trial, color= "deepskyblue"), alpha = 0.05) + 
+      geom_line(aes(y = Diseased, group=trial, color= "deepskyblue"), alpha = .05) + 
       stat_summary(aes(y=Diseased, color ="deepskyblue4"),fun.y= mean, size=1, alpha =0.5, geom = "line")+
-      geom_line(aes(y = NumberHealthy, group=trial,color= "olivedrab3"), alpha = 0.05) + 
+      geom_line(aes(y = NumberHealthy, group=trial,color= "olivedrab3"), alpha = .05) + 
       stat_summary(aes(y=NumberHealthy, color ="olivedrab4"), fun.y= mean, size=1, alpha =0.5, geom = "line")+
-      geom_line(aes(y = Cured, group=trial, color="red"), alpha = 0.05) + 
+      geom_line(aes(y = Cured, group=trial, color="red"), alpha = .05) + 
       stat_summary(aes(y=Cured, color ="red4"), fun.y= mean, size=1, alpha =0.5, geom = "line")+
-      ylab(label="People") + 
-      xlab("Days")+
-      scale_colour_manual(values = c("deepskyblue","deepskyblue4","olivedrab3","olivedrab4","red","red4"), labels = c("disease","disease_avg","healthy","healthy_avg","cured","cured_avg")) 
+      ylab(label="People") + xlab("Days") +
+      theme_bw() +
+        theme(axis.text.x = element_text(size = 12),
+              axis.title = element_text(size = 14, face = "bold"), 
+              legend.title = element_text(size = 14, face = "italic"), 
+              legend.text = element_text(size = 12, face = "italic"), 
+              axis.text.y = element_text(size = 12)) +
+      scale_color_manual(values = c("deepskyblue","deepskyblue4","olivedrab3","olivedrab4","red","red4"), 
+                         labels = c("Diseased","Average Diseased","Healthy","Average Healthy","Cured","Average Cured")) +
+      guides(color=guide_legend("Legend"))
     
+      
+    #Error Notifications 
+    } else{
+      
+      if(percTrtA + percTrtB > 1){
+        showNotification("Percent treated A and percent treated B can't be more than 1.")
+      
+      } else if(healthySymp + spreadRate > 0.13){
+        showNotification("Percent healthy with symptoms and spread rate can't be greater than 0.13.")
+      }
+    }
   })
 
   
    #Creating Visualization (2)
    output$plotCost <- renderPlot({
+     
+     #Assigning Variables to Inputs
+     percTrtA <- as.numeric(input$percTreatA)
+     percTrtB <- as.numeric(input$percTreatB)
+     healthySymp <- as.numeric(input$percHealthyWithSymp)
+     spreadRate <- as.numeric(input$spread)
+     
+     #Condition to create visual
+     if(percTrtA + percTrtB <= 1 && healthySymp + spreadRate <= 0.13) {
+       
     ggplot(sirDF(), aes(x = Days)) +
-      geom_line(aes(y = CostA,group=trial,colour = "tomato1"), alpha=0.05) +
+      geom_line(aes(y = CostA,group=trial,color = "tomato1"), alpha=0.05) +
       stat_summary(aes(y=CostA, color ="tomato4"), fun.y= mean, size=1, alpha =0.5, geom = "line")+
-      geom_line(aes(y = CostB,group=trial, colour = "springgreen2"), alpha=0.05) +
+      geom_line(aes(y = CostB,group=trial, color = "springgreen2"), alpha=0.05) +
       stat_summary(aes(y=CostB, color ="springgreen4"), fun.y= mean, size=1, alpha =0.5, geom = "line")+
-      geom_line(aes(y = Sick.Cost,group=trial, colour = "orange"), alpha=0.05) +
+      geom_line(aes(y = Sick.Cost,group=trial, color = "orange"), alpha=0.05) +
       stat_summary(aes(y=Sick.Cost, color ="orange3"), fun.y= mean, size=1, alpha =0.5, geom = "line")+
-      geom_line(aes(y = Total.Cost_Acc,group=trial, colour = "slateblue1"), alpha=0.05) +
+      geom_line(aes(y = Total.Cost_Acc,group=trial, color = "slateblue1"), alpha=0.05) +
       stat_summary(aes(y=Total.Cost_Acc, color ="slateblue3"), fun.y= mean, size=1, alpha =0.5, geom = "line")+
-      ylab(label="Money") +
-      xlab("Days")+
-     scale_colour_manual(values = c("orange","orange3","slateblue1","slateblue3","springgreen2","springgreen4","tomato1","tomato4"), labels = c("Sick_Cost","Sick_Cost_avg","Total_Cost","Total_Cost_avg","CostB","CostB_avg","CostA","CostA_avg"))
-
+      ylab(label="Money") + xlab("Days") +
+      theme_bw() + 
+         theme(axis.text.x = element_text(size = 12),
+               axis.title = element_text(size = 14, face = "bold"), 
+               legend.title = element_text(size = 14, face = "italic"), 
+               legend.text = element_text(size = 12, face = "italic"), 
+               axis.text.y = element_text(size = 12)) +
+       scale_color_manual(values = c("orange","orange3","slateblue1","slateblue3","springgreen2","springgreen4","tomato1","tomato4"), 
+                          labels = c("Sick Cost","Average Sick Cost","Total Cost","Average Total Cost","CostB","Average CostB","CostA","Average CostA")) +
+       guides(color=guide_legend("Legend"))
+     
+    }
   })
 
    
