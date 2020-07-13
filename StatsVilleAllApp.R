@@ -1,6 +1,4 @@
-#Last Updated on July 9
-
-#Which Variables do we want for X Variable and Y Variable
+#Last Updated on July 13
 
 #Loading Libraries
 library(shiny)
@@ -21,12 +19,14 @@ data.all$GroupID <- as.character(data.all$GroupID)
 data.all$PlayerID <- as.character(data.all$PlayerID)
 
 
+
 #Creating Percent Cured Columns
-data.all <- mutate(data.all, PercentCureA = CureA/TreatA, PercentCureB = CureB/TreatB)
+data.all <- mutate(data.all, PercentCureA = (CureA/TreatA)*100 , PercentCureB = (CureB/TreatB)*100)
 
 #For UI Inputs
 all_groups <- sort(unique(data.all$GroupID))
 all_players <- sort(unique(data.all$PlayerID))
+ChoiceY <- c("Budget", "AvailToTreat", "TreatA", "TreatB", "CureA", "CureB", "PercentCureA", "PercentCureB", "CostA", "CostB", "SickCost")
 
 ##UI
 ui <- fluidPage(
@@ -57,38 +57,46 @@ ui <- fluidPage(
        selectInput(inputId = "xvar",
                   label = "X Variable:",
                   #columns of the dataset
-                  choices = unique(names(data.all)),
-                  selected = unique(names(data.all))[6],
+                  choices = c("PlayerID", "Day"),
+                  selected = "Day",
                   multiple = FALSE),
       
       selectInput(inputId = "yvar",
                   label = "Y Variable:",
                   #columns of the dataset
-                  choices = unique(names(data.all)),
-                  selected = unique(names(data.all))[10],
+                  choices = ChoiceY,
+                  selected = "TreatA",
                   multiple = FALSE),
-      
-      checkboxInput("smoother", "Add a Model", FALSE),
       
       selectInput(inputId = "color",
                   label = "Color by:",
-                  choices = c("Game", "Level", "PlayerID", "Day","WinLose"),
-                  selected = "Level",
+                  choices = c("PlayerID", "Day","WinLose"),
+                  selected = "WinLose",
                   multiple = FALSE),
       
       selectInput(inputId = "facets",
                   label = "Facet by:",
-                  choices = c("None", "Game", "Level", "PlayerID", "Day","WinLose"),
+                  choices = c("None","PlayerID","Day","WinLose"),
                   selected = "None",
                   multiple = FALSE),
+      
+      checkboxInput("smoother", "Add a Model", FALSE),
+      
+      checkboxInput("summary", "Show Summary Statistics", FALSE),
     
-      downloadButton('downloadData', label = "StatsVille Data")
+      downloadButton('downloadData', label = "StatsVille Data"),
+      
+      a(h5("Instructor Details"),
+        href="https://stat2labs.sites.grinnell.edu/statsville.html", 
+        align="left", target = "_blank")
       
     ),
     
     #Outputs
     mainPanel(
-      plotOutput("Plot")
+      plotOutput("Plot"),
+      tableOutput("SummaryTable")
+
     )
   )
 )
@@ -214,8 +222,30 @@ server <- function(input, output,session) {
     })
     
     
- 
+    #Creating Summary Table
+    output$SummaryTable <- renderTable({
+      
+      #Reactive Data
+      plotData <- plotDataR()
+      
+      if(input$summary == TRUE){
         
+        #If there is data
+        if(nrow(plotData) != 0){
+      
+          #Y Variable
+          yvar <- sym(input$yvar)
+            
+          table <- plotData %>% group_by_at(input$xvar) %>%
+            summarize(N = n(), Mean = mean(!!yvar, na.rm = TRUE), SD = sd(!!yvar, na.rm = TRUE))
+        
+        
+          return(table)
+        
+        }
+      }
+  })
+    
 
     #Download Data
     output$downloadData <- downloadHandler(
