@@ -79,7 +79,11 @@ ui <- dashboardPage(skin = "yellow",
                                 value = "25"),
                       textInput(inputId = "sickcost",
                                 label = "Sick Cost",
-                                value = "50")
+                                value = "50"),
+                      
+                      a(h5("Instructor Details"),
+                        href="https://stat2labs.sites.grinnell.edu/statsville.html", 
+                        align="left", target = "_blank")
                     ),
                     
                     dashboardBody(

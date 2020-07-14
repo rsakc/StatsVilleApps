@@ -92,7 +92,11 @@ ui <- fluidPage(
                   selected = "None",
                   multiple = FALSE),
       
-      downloadButton('downloadData', label = "StatsVille Data")
+      downloadButton('downloadData', label = "StatsVille Data"),
+
+      a(h5("Instructor Details"),
+       href="https://stat2labs.sites.grinnell.edu/statsville.html", 
+       align="left", target = "_blank")
       
     ),
     
