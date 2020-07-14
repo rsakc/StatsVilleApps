@@ -1,4 +1,4 @@
-#Last Updated on July 13 2020
+#Last Updated on July 14 2020
  
 #Loading Libraries
 library(shiny)
@@ -14,6 +14,10 @@ data.all <-read.csv("https://www.stat2games.sites.grinnell.edu/data/statsville/g
 #Filtering Data
 data.all <- filter(data.all, Game > 49)   ### Removing Games with no variability
 data.all <- filter(data.all, Level == 1)  ### Restricting to Level = 1
+
+#To Lower
+data.all$PlayerID <- tolower(data.all$PlayerID)
+data.all$GroupID <- tolower(data.all$GroupID)
 
 #Converting to Factor/Character
 data.all$Level <- as.factor(data.all$Level)

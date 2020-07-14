@@ -5,7 +5,7 @@
 #Maybe one medicine instead of two
 #Total cost of treating patients somewhere
 
-
+ 
 #Loading Libraries
 library(shinydashboard)
 library(ggplot2)

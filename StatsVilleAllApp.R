@@ -1,4 +1,4 @@
-#Last Updated on July 13 2020
+#Last Updated on July 14 2020
 
 #Loading Libraries
 library(shiny)
@@ -12,13 +12,15 @@ data.all <-read.csv("https://www.stat2games.sites.grinnell.edu/data/statsville/g
 #Filtering Data
 data.all <- filter(data.all, Level > 0)
 
+#To Lower
+data.all$PlayerID <- tolower(data.all$PlayerID)
+data.all$GroupID <- tolower(data.all$GroupID)
+
 #Converting to Factor/Character
 data.all$Level <- as.factor(data.all$Level)
 data.all$WinLose <- as.factor(data.all$WinLose)
 data.all$GroupID <- as.character(data.all$GroupID)
 data.all$PlayerID <- as.character(data.all$PlayerID)
-
-
 
 #Creating Percent Cured Columns
 data.all <- mutate(data.all, PercentCureA = (CureA/TreatA)*100 , PercentCureB = (CureB/TreatB)*100)
@@ -52,7 +54,9 @@ ui <- fluidPage(
       
       selectInput("levels", "Level",
                   choices = c(1, 2, 3, 4, 5, 6, 7, 8),
-                  multiple = FALSE),
+                  multiple = TRUE,
+                  selectize = TRUE,
+                  selected = 1),
       
        selectInput(inputId = "xvar",
                   label = "X Variable:",
@@ -70,13 +74,13 @@ ui <- fluidPage(
       
       selectInput(inputId = "color",
                   label = "Color by:",
-                  choices = c("PlayerID", "Day","WinLose"),
+                  choices = c("PlayerID", "Day","WinLose", "Level"),
                   selected = "WinLose",
                   multiple = FALSE),
       
       selectInput(inputId = "facets",
                   label = "Facet by:",
-                  choices = c("None","PlayerID","Day","WinLose"),
+                  choices = c("None","PlayerID","Day","WinLose", "Level"),
                   selected = "None",
                   multiple = FALSE),
       
@@ -158,19 +162,19 @@ server <- function(input, output,session) {
       if("all" %in% input$groupID){
         
         if("all" %in% input$playerID){
-          data <- data.all %>% filter(Level == input$levels)
+          data <- data.all %>% filter(Level %in% input$levels)
         
         } else{
-          data <- data.all %>% filter(Level == input$levels, PlayerID %in% input$playerID)
+          data <- data.all %>% filter(Level %in% input$levels, PlayerID %in% input$playerID)
         }
         
       } else{
         
         if("all" %in% input$playerID){
-          data <- data.all %>% filter(Level == input$levels, GroupID %in% input$groupID)
+          data <- data.all %>% filter(Level %in% input$levels, GroupID %in% input$groupID)
           
         } else{
-          data <- data.all %>% filter(Level == input$levels, GroupID %in% input$groupID, PlayerID %in% input$playerID)
+          data <- data.all %>% filter(Level %in% input$levels, GroupID %in% input$groupID, PlayerID %in% input$playerID)
         }
       }
       
@@ -187,6 +191,9 @@ server <- function(input, output,session) {
     
     #Reactive Data
     plotData <- plotDataR()
+    
+    #We need data
+    if(nrow(plotData) > 0){
       
     #General Plot
     myplot <- ggplot(data = plotData, aes_string(x = input$xvar, y = input$yvar, color=input$color)) + 
@@ -219,7 +226,9 @@ server <- function(input, output,session) {
     
     return(myplot)
     
-    })
+    }
+    
+  })
     
     
     #Creating Summary Table

@@ -1,4 +1,4 @@
-#Last Updated on July 13 2020
+#Last Updated on July 14 2020
 
 #Loading Libraries
 library(shiny)
@@ -10,6 +10,10 @@ library(tidyr)
 
 #Importing Data
 data.all <- read_csv("DataTemp.csv")
+
+#To Lower
+data.all$PlayerID <- tolower(data.all$PlayerID)
+data.all$GroupID <- tolower(data.all$GroupID)
 
 #data.all <-read.csv("https://www.stat2games.sites.grinnell.edu/data/getdata.php") 
 #data.all <- filter(data.all, Level > 0)
