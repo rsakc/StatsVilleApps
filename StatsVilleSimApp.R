@@ -1,4 +1,4 @@
-#Last Updated on July 13 2020
+#Last Updated on July 14 2020
 
 ##Comments
 #Number in School -> Population
@@ -181,7 +181,7 @@ server <- function(input, output) {
         #Remaining Days
         for(i in 3:dim(mat)[1]) {
           mat[i,1] = i-1
-          mat[i,4] = mat[i-1, 4] + mat[i-1, 16] - mat[i-1, 14]
+          mat[i,4] = mat[i-1, 4] + mat[i-1, 16] - mat[i-1, 14] #Diseased + Catch Disease - Cured
           mat[i,2] = mat[i-1,2] - mat[i-1, 16]
           mat[i,3] = round(mat[i,2] * healthySymp)
           mat[i,5] = mat[i,3] + mat[i,4]
