@@ -1,4 +1,4 @@
-#Last Updated on July 14 2020
+#Last Updated on July 15 2020
  
 #Loading Libraries
 library(shiny)
@@ -9,8 +9,15 @@ library(dplyr)
 library(stringr)
 
 #Importing Data
-data.all <-read.csv("https://www.stat2games.sites.grinnell.edu/data/statsville/getdata.php") 
+n <- sample(c(0,1), size = 1)
 
+if(n == 0){
+  data.all <-read.csv("https://www.stat2games.sites.grinnell.edu/data/statsville/getdata.php") 
+
+} else{
+  data.all <-read.csv("https://www.stat2games.sites.grinnell.edu/data/statsville/getdata.php")
+}
+  
 #Filtering Data
 data.all <- filter(data.all, Game > 49)   ### Removing Games with no variability
 data.all <- filter(data.all, Level == 1)  ### Restricting to Level = 1
