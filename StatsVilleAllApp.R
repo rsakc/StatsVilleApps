@@ -1,4 +1,4 @@
-#Last Updated on July 15 2020
+#Last Updated on July 23 2020
 
 #Loading Libraries
 library(shiny)
@@ -68,14 +68,12 @@ ui <- fluidPage(
       
        selectInput(inputId = "xvar",
                   label = "X Variable:",
-                  #columns of the dataset
                   choices = c("PlayerID", "Day"),
                   selected = "Day",
                   multiple = FALSE),
       
       selectInput(inputId = "yvar",
                   label = "Y Variable:",
-                  #columns of the dataset
                   choices = ChoiceY,
                   selected = "TreatA",
                   multiple = FALSE),
@@ -109,9 +107,7 @@ ui <- fluidPage(
       plotOutput("Plot"),
       tableOutput("SummaryTable")
 
-    )
-  )
-)
+    )))
 
 
 ##Server
@@ -231,11 +227,9 @@ server <- function(input, output,session) {
       
     }
     
-    
+    #Return Visual
     return(myplot)
-    
     }
-    
   })
     
     
@@ -256,7 +250,6 @@ server <- function(input, output,session) {
           table <- plotData %>% group_by_at(input$xvar) %>%
             summarize(N = n(), Mean = mean(!!yvar, na.rm = TRUE), SD = sd(!!yvar, na.rm = TRUE))
         
-        
           return(table)
         
         }
@@ -274,7 +267,7 @@ server <- function(input, output,session) {
       }
     )
     
-    #Closes Server      
+#Closes Server      
 }
 
 #Running Shiny App

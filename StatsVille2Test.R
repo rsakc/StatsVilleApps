@@ -1,4 +1,4 @@
-#Last Updated on July 14 2020
+#Last Updated on July 23 2020
 
 #Loading Libraries
 library(shiny)
@@ -14,23 +14,6 @@ data.all <- read_csv("DataTemp.csv")
 #To Lower
 data.all$PlayerID <- tolower(data.all$PlayerID)
 data.all$GroupID <- tolower(data.all$GroupID)
-
-#data.all <-read.csv("https://www.stat2games.sites.grinnell.edu/data/getdata.php") 
-#data.all <- filter(data.all, Level > 0)
-#data.all$Level <- as.factor(data.all$Level)
-#data.all$WinLose <- as.factor(data.all$WinLose)
-#data.all$GroupID <- as.character(data.all$GroupID)
-#data.all$PlayerID <- as.character(data.all$PlayerID)
-
-#data.all <- gather(data.all, key = type, value = Count, 10:15)
-#data.all <- mutate(data.all, TreatType = str_sub(type, start= -1), Assgn = str_sub(type,1,nchar(type)-1))
-#data.all$TreatType <- as.factor(data.all$TreatType)
-
-#data.all <- arrange(data.all, Assgn)
-#data.all <- select(data.all, -type)
-
-#data.all <- spread(data.all, key = Assgn, value = Count)
-#data.all <- mutate(data.all, PercentCured = Cure/Treat)
 
 #For UI Inputs
 all_groups <- sort(unique(data.all$GroupID))
@@ -64,27 +47,15 @@ ui <- fluidPage(
       
       selectInput(inputId = "xvar",
                   label = "X Variable:",
-                  #columns of the dataset
                   choices = unique(names(data.all)),
                   selected = unique(names(data.all))[6],
                   multiple = FALSE),
       
       selectInput(inputId = "yvar",
                   label = "Y Variable:",
-                  #columns of the dataset
                   choices = unique(names(data.all)),
                   selected = unique(names(data.all))[15],
                   multiple = FALSE),
-      
-      #checkboxInput('meanvalue',"Display Mean",FALSE),
-      
-    
-      
-#      selectInput(inputId = "color",
-#                  label = "Color by",
-#                  choices = c("Game", "TreatType", "Level", "PlayerID", "Day", "WinLose"),
-#                  selected = "TreatType",
-#                  multiple = FALSE),
       
       selectInput(inputId = "facets",
                   label = "Facet by:",
@@ -103,9 +74,7 @@ ui <- fluidPage(
     #Outputs
     mainPanel(
       plotOutput("Plot")
-    )
-  )
-)
+    )))
 
 ##Server
 server <- function(input, output,session) {
@@ -214,6 +183,7 @@ server <- function(input, output,session) {
         theme(strip.text = element_text(size = 16)) 
     }
     
+    #Return Visual
     return(myplot)
     
   })

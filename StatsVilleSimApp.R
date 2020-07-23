@@ -1,11 +1,5 @@
-#Last Updated on July 14 2020
+#Last Updated on July 23 2020
 
-##Comments
-#Number in School -> Population
-#Maybe one medicine instead of two
-#Total cost of treating patients somewhere
-
- 
 #Loading Libraries
 library(shinydashboard)
 library(ggplot2)
@@ -309,7 +303,6 @@ server <- function(input, output) {
    
 #Closes Server  
 }
-
 
 #Running Shiny App
 shinyApp(ui = ui, server = server)

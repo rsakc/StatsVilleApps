@@ -1,4 +1,4 @@
-#Last Updated on July 15 2020
+#Last Updated on July 23 2020
  
 #Loading Libraries
 library(shiny)
@@ -81,7 +81,6 @@ ui <- fluidPage(
       
       selectInput(inputId = "yvar",
                   label=HTML('<p style="color:red; font-size: 11pt"> Y Variable (Red) </p>'),
-                  #label = "Y Variable: (green)",####
                   choices = ChoiceA,
                   selected = "TreatA",
                   multiple = FALSE),
@@ -125,10 +124,7 @@ ui <- fluidPage(
       uiOutput("ptext"),
       tableOutput("SummaryTable")
      
-    )
-  )
-)
-
+    )))
 
 ##Server
 server <- function(input, output,session) {
@@ -136,7 +132,6 @@ server <- function(input, output,session) {
     #Dynamic Player ID Input
     observe({
      
-    
       if ("all" %in% input$groupID) {gamedata <- data.all}
       else{gamedata <- filter(data.all, GroupID %in% input$groupID)}
     
@@ -311,6 +306,7 @@ server <- function(input, output,session) {
        }
     }
     
+    #Return Visual
     return(myplot)
     
     })
@@ -443,12 +439,6 @@ server <- function(input, output,session) {
       }
   
     })
-    
-    
-    
-    
-    
-    
     
     #Download Data
     output$downloadData <- downloadHandler(
